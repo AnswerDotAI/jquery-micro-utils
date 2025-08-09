@@ -57,10 +57,10 @@ NEW_VERSION="$(perl -ne 'print $1 if /"version":\s*"([^"]+)"/' package.json)"
 update_version() {
   local ver="$1"
   # Update source file version
-  perl -pi -e "s/(jQuery\\s+Micro\\s+Utils\\s+v)\\d+\\.\\d+\\.\\d+/\$1$ver/g" src/jquery-micro-utils.js
-  perl -pi -e "s/(\\\$\\.microUtils\\s*=\\s*\\{\\s*version:\\s*['\"])([^'\"]+)(['\"]\\s*\\})/\$1$ver\$3/g" src/jquery-micro-utils.js
+  perl -pi -e 's/(jQuery\s+Micro\s+Utils\s+v)\d+\.\d+\.\d+/${1}'"$ver"'/g' src/jquery-micro-utils.js
+  perl -pi -e 's/(\$\.microUtils\s*=\s*\{\s*version:\s*['\''"])([^'\''"]+)(['\''"])\s*\}/${1}'"$ver"'${3}/g' src/jquery-micro-utils.js
   # Update README CDN link
-  perl -pi -e "s/(cdn\\.jsdelivr\\.net\\/gh\\/AnswerDotAI\\/jquery-micro-utils\\@)\\d+\\.\\d+\\.\\d+/\$1$ver/g" README.md
+  perl -pi -e 's/(cdn\.jsdelivr\.net\/gh\/AnswerDotAI\/jquery-micro-utils@)\d+\.\d+\.\d+/${1}'"$ver"'/g' README.md
 }
 
 update_version "$NEW_VERSION"
