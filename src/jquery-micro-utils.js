@@ -10,47 +10,28 @@
 }(function ($) {
   'use strict';
 
-  if (!$ || !$.fn) { throw new Error('jquery-micro-utils requires jQuery to be loaded first.'); }
+  if (!$?.fn) throw new Error('jquery-micro-utils requires jQuery to be loaded first.');
 
   function toPred(test) {
     if (typeof test === 'function') return test;
-    if (typeof test === 'string' && test.trim()) {
-      return function (el) { return el.matches(test); };
-    }
-    return function () { return true; };
+    if (typeof test === 'string' && test.trim()) { return el => el.matches(test); }
+    return () => true;
   }
+
+  function toUnq(nodes) { return $($.uniqueSort($.makeArray(nodes).filter(Boolean))); }
 
   function firstSibling(el, dir, pred) {
-    while (el && (el = el[dir])) { if (pred(el)) return el; }
+    while (el = el[dir]) { if (pred(el)) return el; }
   }
 
-  function siblingMatch(set, dir, test) {
-    var pred = toPred(test);
-    var $mapped = set.map(function (_i, el) { return firstSibling(el, dir, pred); });
-    return $( $.uniqueSort($mapped.get()));
-  }
+  function siblingMatch(set, dir, test) { return toUnq(set.map((_, el) => firstSibling(el, dir, toPred(test)))); }
 
   $.fn.nextMatch = function (selectorOrFn) { return siblingMatch(this, 'nextElementSibling', selectorOrFn); };
-
   $.fn.prevMatch = function (selectorOrFn) { return siblingMatch(this, 'previousElementSibling', selectorOrFn); };
 
-  function toUnq(nodes) {
-    var arr = [];
-    for (let i = 0; i < nodes.length; i++) {
-      var n = nodes[i];
-      if (n) arr.push(n);
-    }
-    return $( $.uniqueSort(arr) );
-  }
-
-  $.fn.findFirst = function (selector) {
-    if (typeof selector !== 'string' || !selector.trim()) return this.pushStack([]);
-    var out = new Array(this.length);
-    for (let i = 0; i < this.length; i++) {
-      var el = this[i];
-      out[i] = el && el.querySelector ? el.querySelector(selector) : null;
-    }
-    return toUnq(out);
+  $.fn.findFirst = function(selector) {
+    if (!selector?.trim()) return this.pushStack([]);
+    return toUnq(this.map((_, el) => el.querySelector?.(selector)));
   };
 
   $.fn.containsText = function (query) {
@@ -63,30 +44,24 @@
   };
 
   $.fn.tap = function (fn) {
-    if (typeof fn === 'function') fn(this);
+    fn?.(this);
     return this;
   };
 
-  $.fn.inViewport = function (margin) {
-    var m = Number.isFinite(margin) ? Number(margin) : 0;
+  $.fn.inViewport = function (margin = 0) {
+    var m = Number(margin) || 0;
     return this.filter(function () {
       if (!(this instanceof Element)) return false;
       var rect = this.getBoundingClientRect();
-      var vpH = window.innerHeight || document.documentElement.clientHeight;
-      var vpW = window.innerWidth || document.documentElement.clientWidth;
-      return rect.bottom>=-m && rect.right>=-m && rect.top<=vpH+m && rect.left<=vpW+m;
+      return rect.bottom >= -m && 
+             rect.right >= -m && 
+             rect.top <= window.innerHeight + m && 
+             rect.left <= window.innerWidth + m;
     });
   };
 
-  try {
-    Object.defineProperty($.fn, 'exists', {
-      configurable: true,
-      get: function () { return this.length > 0; }
-    });
-  } catch (_) {}
-
-  $.as$ = function (x) { return x && x.jquery ? x : $(x); };
-
+  $.as$ = x => x?.jquery ? x : $(x);
   $.microUtils = { version: '0.1.2' };
 
 }));
+

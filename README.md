@@ -2,103 +2,165 @@
 
 Tiny, CDN-friendly helpers to make jQuery traversal and ergonomics snappier — no widgets, just micro-utilities.
 
+## Why?
+
+jQuery is great, but sometimes you need:
+- **First match per element** (not all matches or globally first)
+- **Short-circuit traversal** (stop at first match, not collect all)
+- **Predicate functions** (not just CSS selectors)
+- **Modern conveniences** (tap, viewport detection)
+
+This adds ~1KB of focused utilities without the bloat of jQuery UI or larger plugins.
+
 ## Install
 
 ```html
 <script src="https://code.jquery.com/jquery-3.7.1.slim.min.js"></script>
-<script src="https://cdn.jsdelivr.net/gh/AnswerDotAI/jquery-micro-utils/src/jquery-micro-utils.js"></script>
+<script src="https://cdn.jsdelivr.net/gh/AnswerDotAI/jquery-micro-utils@0.1.2/src/jquery-micro-utils.js"></script>
 ```
 
-UMD build works with `<script>`, AMD, or CommonJS.
+Or use npm/yarn:
+```bash
+npm install jquery-micro-utils
+```
 
 ## API
 
-### `.nextMatch(selectorOrFn)`
+### `.nextMatch(selectorOrFn)` / `.prevMatch(selectorOrFn)`
 
-**What:** First following sibling that matches. Short-circuits (faster than `.nextAll().first()`).
-
-```js
-const $bar = $('.foo').nextMatch('.bar');
-if ($bar.exists) {
-  $bar.addClass('hit');
-}
-```
-
-### `.prevMatch(selectorOrFn)`
-
-**What:** First previous sibling that matches (short-circuits).
+Find the **first** sibling that matches (not all). Accepts CSS selector or predicate function.
 
 ```js
-$('#item42').prevMatch('.active').tap($x => console.log($x[0]));
+// Find next sibling with 10+ characters (can't do this with jQuery's .next())
+$('.item').nextMatch(el => el.textContent.length > 10);
+
+// More efficient than .nextAll('.active').first() - stops at first match
+$('.current').nextMatch('.active').addClass('highlight');
+
+// Works backwards too
+$('#item-5').prevMatch('.section-header').css('font-weight', 'bold');
 ```
+
+**vs jQuery:** `.next()` only checks immediate sibling. `.nextAll()` gets ALL matches. `nextMatch()` finds FIRST match per element.
 
 ### `.findFirst(selector)`
 
-**What:** First descendant under each root via `querySelector`.
+Get the **first descendant** from each element (not all descendants).
 
 ```js
-const $btn = $('.card').findFirst('button.primary');
+// Get first button from EACH card (not just the globally first)
+$('.card').findFirst('button').prop('disabled', true);
+
+// Faster than .find('img').first() when you only need one per container
+$('.gallery-row').findFirst('img').addClass('hero');
 ```
+
+**vs jQuery:** `.find()` returns ALL matches. `.find().first()` returns globally first. `findFirst()` returns first match FROM EACH element.
 
 ### `.containsText(str|RegExp)`
 
-**What:** Filter elements by `textContent` (string contains or RegExp test).
+Filter elements by text content.
 
 ```js
-const $matches = $('li').containsText(/done|complete/i);
+// String contains
+$('button').containsText('Save').addClass('primary');
+
+// RegExp for complex matching
+$('tr').containsText(/^(error|warning):/i).css('color', 'red');
+
+// Find elements with specific price ranges
+$('.price').containsText(/\$[5-9][0-9]\./).addClass('mid-range');
 ```
 
 ### `.inViewport(margin = 0)`
 
-**What:** Elements whose bounding rect intersects the viewport (±margin px).
+Filter to elements currently visible in viewport.
 
 ```js
-const $visible = $('.section').inViewport(100);
+// Lazy-load images as they come into view
+$('img[data-src]').inViewport(200).each(function() {
+  this.src = this.dataset.src;
+  delete this.dataset.src;
+});
+
+// Animate elements when visible
+$('.animate-me').inViewport().addClass('fade-in');
+
+// Check what sections user can see
+$('section').inViewport().tap(console.log);
 ```
 
 ### `.tap(fn)`
 
-**What:** Chain-tap for debugging/side-effects; returns the same jQuery set.
+Debug or side-effect without breaking the chain.
 
 ```js
-$('.item').tap($it => console.log('count:', $it.length)).addClass('seen');
+$('.item')
+  .tap($els => console.log(`Processing ${$els.length} items`))
+  .addClass('processed')
+  .tap($els => analytics.track('items.processed', $els.length))
+  .fadeIn();
+
+// Quick debugging
+$('.mystery').tap(console.log).remove();
 ```
 
 ### `$.as$(x)`
 
-**What:** Normalize DOM or jQuery input to a jQuery object.
+Safely convert anything to jQuery object.
 
 ```js
-const $el = $.as$(maybeDomOrJq);
+function process(element) {
+  // Don't worry if element is DOM node, jQuery object, or selector string
+  const $el = $.as$(element);
+  $el.addClass('processed');
+}
+
+process(document.querySelector('.item'));  // DOM node - works
+process($('.item'));                       // jQuery object - works
+process('.item');                          // Selector string - works
+```
+
+## Real-World Examples
+
+### Accordion behavior
+```js
+$('.accordion-header').on('click', function() {
+  $(this)
+    .nextMatch('.accordion-content')
+    .slideToggle()
+    .tap($content => console.log('Toggled:', $content));
+});
+```
+
+### Progressive enhancement
+```js
+// Add "Read more" only to truncated content
+$('.content').containsText('...').after('<button>Read more</button>');
+```
+
+### Performance monitoring
+```js
+// Track which sections users actually see
+const viewed = new Set();
+setInterval(() => {
+  $('section[id]').inViewport().each(function() {
+    if (!viewed.has(this.id)) {
+      viewed.add(this.id);
+      analytics.track('section.viewed', { id: this.id });
+    }
+  });
+}, 1000);
 ```
 
 ## Development
 
 ```bash
-npm i
+npm install
+npm run serve  # localhost:8080/examples/
 ```
-
-### Manual Demo
-
-Open `examples/index.html` in any browser to try the utilities against a small fixture page (no build or server required). It loads jQuery 3.x from the CDN and the UMD source from `src/`.
-
-Or run a tiny static server:
-
-```bash
-npm run serve
-```
-
-Then open `http://localhost:8080/examples/`.
-
-## Files
-
-- `src/jquery-micro-utils.js` – source (UMD)
-- `examples/index.html` – manual browser demo
-
-## Metadata
-
-- `$.microUtils.version`: library version string.
 
 ## License
 
-MIT, © Answer.AI 2025
+MIT © Answer.AI 2025
+
