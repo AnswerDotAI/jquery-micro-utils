@@ -1,5 +1,5 @@
 /*!
- * 0.1.3
+ * 0.1.4
  * Small, CDN-friendly helpers for efficient traversal & ergonomics.
  * (c) 2025 Answer.AI — MIT License
  */
@@ -61,7 +61,7 @@
   };
 
   $.as$ = x => x?.jquery ? x : $(x);
-  .1.3' };
+  $.microUtils = { version: '0.1.4' };
 
 }));
 
