@@ -5,8 +5,8 @@ Tiny, CDN-friendly helpers to make jQuery traversal and ergonomics snappier — 
 ## Install
 
 ```html
-<script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
-<script src="/src/jquery-micro-utils.js"></script>
+<script src="https://code.jquery.com/jquery-3.7.1.slim.min.js"></script>
+<script src="https://cdn.jsdelivr.net/gh/AnswerDotAI/jquery-micro-utils/src/jquery-micro-utils.js"></script>
 ```
 
 UMD build works with `<script>`, AMD, or CommonJS.
