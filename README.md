@@ -98,16 +98,15 @@ npm run serve
 
 Then open `http://localhost:8080/examples/`.
 
-### Manual Demo
-
-Open `examples/index.html` in any browser to try the utilities against a small fixture page (no build or server required). It loads jQuery 3.x from the CDN and the UMD source from `src/`.
-
 ## Files
 
 - `src/jquery-micro-utils.js` – source (UMD)
 - `examples/index.html` – manual browser demo
 
+## Metadata
+
+- `$.microUtils.version`: library version string.
+
 ## License
 
 MIT, © Answer.AI 2025
-
