@@ -16,7 +16,7 @@ This adds ~1KB of focused utilities without the bloat of jQuery UI or larger plu
 
 ```html
 <script src="https://code.jquery.com/jquery-3.7.1.slim.min.js"></script>
-<script src="https://cdn.jsdelivr.net/gh/AnswerDotAI/jquery-micro-utils@0.1.2/src/jquery-micro-utils.js"></script>
+<script src="https://.1.3/src/jquery-micro-utils.js"></script>
 ```
 
 Or use npm/yarn:

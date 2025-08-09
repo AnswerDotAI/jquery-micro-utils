@@ -1,5 +1,5 @@
 /*!
- * jQuery Micro Utils v0.1.2
+ * .1.3
  * Small, CDN-friendly helpers for efficient traversal & ergonomics.
  * (c) 2025 Answer.AI — MIT License
  */
@@ -61,7 +61,7 @@
   };
 
   $.as$ = x => x?.jquery ? x : $(x);
-  $.microUtils = { version: '0.1.2' };
+  .1.3' };
 
 }));
 
