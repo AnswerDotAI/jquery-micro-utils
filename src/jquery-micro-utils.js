@@ -1,27 +1,19 @@
-/* This file mirrors the plugin in the main canvas. Keep this copy under src/ for packaging. */
-
 /*!
  * jQuery Micro Utils v0.1.1
  * Small, CDN-friendly helpers for efficient traversal & ergonomics.
- * (c) 2025 — MIT License
+ * (c) 2025 Answer.AI — MIT License
  */
 (function (factory) {
-  if (typeof define === 'function' && define.amd) {
-    define(['jquery'], factory);
-  } else if (typeof module === 'object' && module.exports) {
-    module.exports = factory(require('jquery'));
-  } else {
-    factory(jQuery);
-  }
+  if (typeof define === 'function' && define.amd) { define(['jquery'], factory);
+  } else if (typeof module === 'object' && module.exports) { module.exports = factory(require('jquery'));
+  } else { factory(jQuery); }
 }(function ($) {
   'use strict';
 
-  if (!$ || !$.fn) {
-    throw new Error('jquery-micro-utils requires jQuery to be loaded first.');
-  }
+  if (!$ || !$.fn) { throw new Error('jquery-micro-utils requires jQuery to be loaded first.'); }
 
-  function toPredicate(test) {
-    if (typeof test === 'function') return /** @type {(el: Element) => boolean} */(test);
+  function toPred(test) {
+    if (typeof test === 'function') return test;
     if (typeof test === 'string' && test.trim()) {
       return function (el) { return el.matches(test); };
     }
@@ -30,57 +22,57 @@
 
   function firstSibling(start, dir, pred) {
     let el = start;
-    while (el && (el = /** @type {Element|null} */(el[dir]))) {
+    while (el && (el = el[dir])) {
       if (pred(el)) return el;
     }
     return null;
   }
 
-  function toUniqueSet(nodes) {
-    const arr = [];
+  function toUnq(nodes) {
+    var arr = [];
     for (let i = 0; i < nodes.length; i++) {
-      const n = nodes[i];
+      var n = nodes[i];
       if (n) arr.push(n);
     }
     return $( $.uniqueSort(arr) );
   }
 
   $.fn.nextMatch = function (selectorOrFn) {
-    const pred = toPredicate(selectorOrFn);
-    const out = new Array(this.length);
+    var pred = toPred(selectorOrFn);
+    var out = new Array(this.length);
     for (let i = 0; i < this.length; i++) {
-      const el = this[i];
+      var el = this[i];
       out[i] = el ? firstSibling(el, 'nextElementSibling', pred) : null;
     }
-    return toUniqueSet(out);
+    return toUnq(out);
   };
 
   $.fn.prevMatch = function (selectorOrFn) {
-    const pred = toPredicate(selectorOrFn);
-    const out = new Array(this.length);
+    var pred = toPred(selectorOrFn);
+    var out = new Array(this.length);
     for (let i = 0; i < this.length; i++) {
-      const el = this[i];
+      var el = this[i];
       out[i] = el ? firstSibling(el, 'previousElementSibling', pred) : null;
     }
-    return toUniqueSet(out);
+    return toUnq(out);
   };
 
   $.fn.findFirst = function (selector) {
     if (typeof selector !== 'string' || !selector.trim()) return this.pushStack([]);
-    const out = new Array(this.length);
+    var out = new Array(this.length);
     for (let i = 0; i < this.length; i++) {
-      const el = this[i];
+      var el = this[i];
       out[i] = el && el.querySelector ? el.querySelector(selector) : null;
     }
-    return toUniqueSet(out);
+    return toUnq(out);
   };
 
   $.fn.containsText = function (query) {
     if (query == null) return this.pushStack([]);
-    const isRegex = query instanceof RegExp;
+    var isRegex = query instanceof RegExp;
     return this.filter(function () {
-      const t = (this.textContent || '').trim();
-      return isRegex ? /** @type {RegExp} */(query).test(t) : t.includes(String(query));
+      var t = (this.textContent || '').trim();
+      return isRegex ? query.test(t) : t.includes(String(query));
     });
   };
 
@@ -90,18 +82,13 @@
   };
 
   $.fn.inViewport = function (margin) {
-    const m = Number.isFinite(margin) ? Number(margin) : 0;
+    var m = Number.isFinite(margin) ? Number(margin) : 0;
     return this.filter(function () {
       if (!(this instanceof Element)) return false;
-      const rect = this.getBoundingClientRect();
-      const vpH = window.innerHeight || document.documentElement.clientHeight;
-      const vpW = window.innerWidth || document.documentElement.clientWidth;
-      return (
-        rect.bottom >= -m &&
-        rect.right  >= -m &&
-        rect.top    <= vpH + m &&
-        rect.left   <= vpW + m
-      );
+      var rect = this.getBoundingClientRect();
+      var vpH = window.innerHeight || document.documentElement.clientHeight;
+      var vpW = window.innerWidth || document.documentElement.clientWidth;
+      return rect.bottom>=-m && rect.right>=-m && rect.top<=vpH+m && rect.left<=vpW+m;
     });
   };
 
@@ -117,3 +104,4 @@
   $.microUtils = { version: '0.1.1' };
 
 }));
+
