@@ -11,21 +11,6 @@ set -euo pipefail
 REPO_ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 cd "$REPO_ROOT"
 
-if ! command -v gh >/dev/null 2>&1; then
-  echo "Error: gh (GitHub CLI) is required." >&2
-  exit 1
-fi
-
-if ! command -v node >/dev/null 2>&1; then
-  echo "Error: node is required." >&2
-  exit 1
-fi
-
-if ! command -v npm >/dev/null 2>&1; then
-  echo "Error: npm is required." >&2
-  exit 1
-fi
-
 if ! git rev-parse --is-inside-work-tree >/dev/null 2>&1; then
   echo "Error: not inside a git repository." >&2
   exit 1
@@ -75,7 +60,7 @@ NODE
 }
 
 if [[ -z "$CURRENT_VERSION" ]]; then
-  # Default initial version agreed: 0.1.0
+  # Default initial version
   init_if_missing "0.1.0"
   CURRENT_VERSION="0.1.0"
   # Update HEAD SHA after the init commit
@@ -91,10 +76,7 @@ if gh release view "$TAG" >/dev/null 2>&1; then
 fi
 
 echo "Creating GitHub release $TAG from $BRANCH@$HEAD_SHA"
-gh release create "$TAG" \
-  --title "$TAG" \
-  --generate-notes \
-  --target "$HEAD_SHA"
+gh release create "$TAG" --title "$TAG" --generate-notes --target "$HEAD_SHA"
 
 # Bump patch version in package.json without creating a git tag
 echo "Bumping patch version"
