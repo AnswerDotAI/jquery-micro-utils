@@ -1,0 +1,130 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>jQuery Micro Utils – Manual Demo</title>
+    <style>
+      :root { color-scheme: light dark; }
+      body { font: 14px/1.4 -apple-system, BlinkMacSystemFont, Segoe UI, Roboto, Helvetica, Arial, sans-serif; margin: 24px; }
+      h1 { margin: 0 0 8px; font-size: 18px; }
+      .muted { opacity: .7; font-size: 12px; }
+      ul { padding-left: 18px; }
+      li.pass { color: #2e7d32; }
+      li.fail { color: #c62828; }
+      code { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; }
+      .grid { display: grid; grid-template-columns: 320px 1fr; gap: 24px; align-items: start; }
+      .panel { padding: 12px 14px; border: 1px solid rgba(127,127,127,.35); border-radius: 8px; }
+      .pill { display: inline-block; padding: 2px 8px; border-radius: 999px; border: 1px solid rgba(127,127,127,.35); font-size: 12px; }
+      .spacer { height: 1200px; }
+      .tag { display: inline-block; padding: 1px 6px; border-radius: 4px; background: rgba(127,127,127,.15); margin-left: 6px; font-size: 11px; }
+      .demo-list li { padding: 2px 0; }
+    </style>
+    <!-- jQuery 3.x from CDN -->
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js" integrity="sha256-/JqT3SQfawRcv/BIHPThkBvs0OEvtFFmqPF/lYI/Cxo=" crossorigin="anonymous"></script>
+    <!-- Load the UMD source directly -->
+    <script src="../src/jquery-micro-utils.js"></script>
+  </head>
+  <body>
+    <h1>jQuery Micro Utils <span id="ver" class="pill">loading…</span></h1>
+    <div class="muted">Open this file in a browser. No build or server required.</div>
+    <br/>
+    <div class="grid">
+      <div class="panel">
+        <strong>Quick Assertions</strong>
+        <ul id="results"></ul>
+      </div>
+      <div class="panel">
+        <strong>Demo DOM</strong>
+        <ul class="demo-list" id="siblings">
+          <li class="item a">A</li>
+          <li class="item b start">B <span class="tag">start</span></li>
+          <li class="item c">C</li>
+          <li class="item d matchable">D <span class="tag">matchable</span></li>
+          <li class="item e">E</li>
+          <li class="item f matchable">F <span class="tag">matchable</span></li>
+        </ul>
+
+        <div id="find-first">
+          <div class="card">
+            <div><span>noop</span></div>
+            <div>
+              <span class="hit special">special 1</span>
+              <span class="special">special 2</span>
+            </div>
+          </div>
+        </div>
+
+        <div id="text-blocks">
+          <p class="t">Alpha bravo</p>
+          <p class="t">Charlie DELTA</p>
+          <p class="t">Echo</p>
+        </div>
+
+        <div id="tap-target">tap me</div>
+
+        <div class="spacer"></div>
+        <div id="offscreen" style="margin-top: 16px;">I start off-screen until you scroll here.</div>
+      </div>
+    </div>
+
+    <script>
+      (function () {
+        function li(ok, msg) {
+          var el = document.createElement('li');
+          el.className = ok ? 'pass' : 'fail';
+          el.textContent = (ok ? '✓ ' : '✗ ') + msg;
+          document.getElementById('results').appendChild(el);
+        }
+
+        // Version badge
+        document.getElementById('ver').textContent = $.microUtils && $.microUtils.version ? 'v' + $.microUtils.version : 'unknown';
+
+        // 1) $.microUtils.version
+        li(!!($.microUtils && $.microUtils.version), '$.microUtils.version present');
+
+        // 2) .nextMatch / .prevMatch against sibling list
+        var $start = $('#siblings .start');
+        var $next = $start.nextMatch('.matchable');
+        var $prev = $('#siblings .f').prevMatch('.c');
+        li($next.exists === true, 'nextMatch finds first .matchable');
+        li($prev.containsText('C').length === 1, 'prevMatch finds previous C');
+
+        // 3) .findFirst
+        var $firstSpecial = $('#find-first .card').findFirst('.special');
+        li($firstSpecial.text().trim() === 'special 1', 'findFirst returns first descendant match');
+
+        // 4) .containsText (string & RegExp)
+        li($('.t').containsText('Alpha').length === 1, 'containsText("Alpha") returns 1');
+        li($('.t').containsText(/delta/i).length === 1, 'containsText(/delta/i) returns 1');
+
+        // 5) .tap
+        var $tap = $('#tap-target').tap(function ($x) { $x.addClass('tapped'); });
+        li($tap.hasClass('tapped'), 'tap applies side-effect and returns same set');
+
+        // 6) .exists (property)
+        li($('body').exists === true, 'exists property is true for body');
+        li($('.no-such-element').exists === false, 'exists is false for empty set');
+
+        // 7) $.as$
+        li($.as$(document.body).jquery === '1' || !!$.as$(document.body).jquery, 'as$ wraps DOM to jQuery');
+        var jq = $('<div>');
+        li($.as$(jq) === jq, 'as$ returns input if already jQuery');
+
+        // 8) .inViewport (live indicator, since viewport size varies)
+        function viewportStatus() {
+          var inViewVisible = $('#siblings').inViewport().length === 1;
+          var inViewOffscreen = $('#offscreen').inViewport().length === 1;
+          document.getElementById('invp').textContent = JSON.stringify({ siblings: inViewVisible, offscreen: inViewOffscreen });
+        }
+        var info = document.createElement('div');
+        info.className = 'panel';
+        info.innerHTML = '<strong>Viewport check</strong> <span class="muted">(scroll the page)</span><div id="invp" style="margin-top:6px; font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;"></div>';
+        document.querySelector('.grid').appendChild(info);
+        viewportStatus();
+        window.addEventListener('scroll', viewportStatus, { passive: true });
+        window.addEventListener('resize', viewportStatus);
+      })();
+    </script>
+  </body>
+  </html>

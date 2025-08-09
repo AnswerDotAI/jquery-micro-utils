@@ -1,0 +1,8 @@
+{
+  "name": "jquery-micro-utils",
+  "private": true,
+  "type": "commonjs",
+  "scripts": {
+    "serve": "node scripts/serve.js . 8080"
+  }
+}
