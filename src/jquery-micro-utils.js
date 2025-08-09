@@ -1,5 +1,5 @@
 /*!
- * jQuery Micro Utils v0.1.1
+ * jQuery Micro Utils v0.1.2
  * Small, CDN-friendly helpers for efficient traversal & ergonomics.
  * (c) 2025 Answer.AI — MIT License
  */
@@ -20,13 +20,19 @@
     return function () { return true; };
   }
 
-  function firstSibling(start, dir, pred) {
-    let el = start;
-    while (el && (el = el[dir])) {
-      if (pred(el)) return el;
-    }
-    return null;
+  function firstSibling(el, dir, pred) {
+    while (el && (el = el[dir])) { if (pred(el)) return el; }
   }
+
+  function siblingMatch(set, dir, test) {
+    var pred = toPred(test);
+    var $mapped = set.map(function (_i, el) { return firstSibling(el, dir, pred); });
+    return $( $.uniqueSort($mapped.get()));
+  }
+
+  $.fn.nextMatch = function (selectorOrFn) { return siblingMatch(this, 'nextElementSibling', selectorOrFn); };
+
+  $.fn.prevMatch = function (selectorOrFn) { return siblingMatch(this, 'previousElementSibling', selectorOrFn); };
 
   function toUnq(nodes) {
     var arr = [];
@@ -36,26 +42,6 @@
     }
     return $( $.uniqueSort(arr) );
   }
-
-  $.fn.nextMatch = function (selectorOrFn) {
-    var pred = toPred(selectorOrFn);
-    var out = new Array(this.length);
-    for (let i = 0; i < this.length; i++) {
-      var el = this[i];
-      out[i] = el ? firstSibling(el, 'nextElementSibling', pred) : null;
-    }
-    return toUnq(out);
-  };
-
-  $.fn.prevMatch = function (selectorOrFn) {
-    var pred = toPred(selectorOrFn);
-    var out = new Array(this.length);
-    for (let i = 0; i < this.length; i++) {
-      var el = this[i];
-      out[i] = el ? firstSibling(el, 'previousElementSibling', pred) : null;
-    }
-    return toUnq(out);
-  };
 
   $.fn.findFirst = function (selector) {
     if (typeof selector !== 'string' || !selector.trim()) return this.pushStack([]);
@@ -101,7 +87,6 @@
 
   $.as$ = function (x) { return x && x.jquery ? x : $(x); };
 
-  $.microUtils = { version: '0.1.1' };
+  $.microUtils = { version: '0.1.2' };
 
 }));
-

@@ -87,8 +87,8 @@
         var $start = $('#siblings .start');
         var $next = $start.nextMatch('.matchable');
         var $prev = $('#siblings .f').prevMatch('.c');
-        li($next.exists === true, 'nextMatch finds first .matchable');
-        li($prev.containsText('C').length === 1, 'prevMatch finds previous C');
+        li($next.exists === true && $next.length === 1, 'nextMatch returns only first match');
+        li($prev.containsText('C').length === 1 && $prev.length === 1, 'prevMatch returns only previous match');
 
         // 3) .findFirst
         var $firstSpecial = $('#find-first .card').findFirst('.special');
