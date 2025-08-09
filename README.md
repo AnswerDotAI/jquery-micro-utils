@@ -64,14 +64,6 @@ const $visible = $('.section').inViewport(100);
 $('.item').tap($it => console.log('count:', $it.length)).addClass('seen');
 ```
 
-### `.exists` (property)
-
-**What:** Boolean convenience for “has at least one element”.
-
-```js
-if ($('.toast').exists) { /* ... */ }
-```
-
 ### `$.as$(x)`
 
 **What:** Normalize DOM or jQuery input to a jQuery object.
