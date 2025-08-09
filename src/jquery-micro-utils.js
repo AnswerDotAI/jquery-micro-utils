@@ -1,7 +1,7 @@
 /* This file mirrors the plugin in the main canvas. Keep this copy under src/ for packaging. */
 
 /*!
- * jQuery Micro Utils v0.2.0
+ * jQuery Micro Utils v0.1.0
  * Small, CDN-friendly helpers for efficient traversal & ergonomics.
  * (c) 2025 — MIT License
  */
@@ -114,6 +114,6 @@
 
   $.as$ = function (x) { return x && x.jquery ? x : $(x); };
 
-  $.microUtils = { version: '0.2.0' };
+  $.microUtils = { version: '0.1.0' };
 
 }));

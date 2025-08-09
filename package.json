@@ -4,5 +4,6 @@
   "type": "commonjs",
   "scripts": {
     "serve": "node scripts/serve.js . 8080"
-  }
+  },
+  "version": "0.1.0"
 }
