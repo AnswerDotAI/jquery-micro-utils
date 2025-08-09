@@ -4,8 +4,7 @@ set -euo pipefail
 
 # Release script for jquery-micro-utils
 # - Creates a GitHub release for the current version
-# - Bumps patch version in package.json
-# - Syncs runtime version in src/jquery-micro-utils.js
+# - Bumps patch version in package.json, src file, and README CDN link
 # - Commits and pushes the bump
 
 REPO_ROOT="$(cd "$(dirname "$0")/.." && pwd)"
@@ -16,7 +15,7 @@ if ! git rev-parse --is-inside-work-tree >/dev/null 2>&1; then
   exit 1
 fi
 
-# Ensure working tree is clean to avoid accidental releases of uncommitted code
+# Ensure working tree is clean
 if ! git diff-index --quiet HEAD --; then
   echo "Error: working tree has uncommitted changes. Please commit or stash before releasing." >&2
   exit 1
@@ -25,51 +24,22 @@ fi
 BRANCH="$(git rev-parse --abbrev-ref HEAD)"
 HEAD_SHA="$(git rev-parse HEAD)"
 
-PKG_JSON="package.json"
-SRC_FILE="src/jquery-micro-utils.js"
-
-if [[ ! -f "$PKG_JSON" ]]; then
-  echo "Error: $PKG_JSON not found." >&2
-  exit 1
-fi
-
-# Read version from package.json; initialize if missing
-CURRENT_VERSION="$(node -e "try{const v=require('./package.json').version||'';process.stdout.write(String(v||''))}catch(e){process.stdout.write('')}")"
-
-init_if_missing() {
-  local init_ver="$1"
-  echo "Initializing package version to $init_ver"
-  npm version "$init_ver" --no-git-tag-version >/dev/null
-
-  # Sync runtime version in source file if present
-  if [[ -f "$SRC_FILE" ]]; then
-    node - <<'NODE' "$init_ver" "$SRC_FILE"
-const fs = require('fs');
-const path = process.argv[3];
-const ver = process.argv[2];
-let s = fs.readFileSync(path, 'utf8');
-s = s.replace(/(jQuery\s+Micro\s+Utils\s+v)(\d+\.\d+\.\d+)/, `$1${ver}`);
-s = s.replace(/(\$\.microUtils\s*=\s*\{\s*version:\s*['"])([^'"]+)(['"]\s*\})/, `$1${ver}$3`);
-fs.writeFileSync(path, s);
-NODE
-    git add "$PKG_JSON" "$SRC_FILE"
-  else
-    git add "$PKG_JSON"
-  fi
-  git commit -m "chore(version): initialize to v$init_ver" >/dev/null
-}
+# Read current version from package.json
+CURRENT_VERSION="$(perl -ne 'print $1 if /"version":\s*"([^"]+)"/' package.json)"
 
 if [[ -z "$CURRENT_VERSION" ]]; then
-  # Default initial version
-  init_if_missing "0.1.0"
+  echo "Initializing package version to 0.1.0"
+  npm version "0.1.0" --no-git-tag-version >/dev/null
+  update_version "0.1.0"
+  git add package.json src/jquery-micro-utils.js README.md
+  git commit -m "chore(version): initialize to v0.1.0" >/dev/null
   CURRENT_VERSION="0.1.0"
-  # Update HEAD SHA after the init commit
   HEAD_SHA="$(git rev-parse HEAD)"
 fi
 
 TAG="v$CURRENT_VERSION"
 
-# Ensure the tag doesn't already exist remotely as a release
+# Ensure the tag doesn't already exist remotely
 if gh release view "$TAG" >/dev/null 2>&1; then
   echo "Error: release $TAG already exists on GitHub." >&2
   exit 1
@@ -78,28 +48,23 @@ fi
 echo "Creating GitHub release $TAG from $BRANCH@$HEAD_SHA"
 gh release create "$TAG" --title "$TAG" --generate-notes --target "$HEAD_SHA"
 
-# Bump patch version in package.json without creating a git tag
+# Bump patch version
 echo "Bumping patch version"
 npm version patch --no-git-tag-version >/dev/null
 
-NEW_VERSION="$(node -p "require('./package.json').version")"
+NEW_VERSION="$(perl -ne 'print $1 if /"version":\s*"([^"]+)"/' package.json)"
 
-# Sync runtime version in source file
-if [[ -f "$SRC_FILE" ]]; then
-  node - <<'NODE' "$NEW_VERSION" "$SRC_FILE"
-const fs = require('fs');
-const path = process.argv[3];
-const ver = process.argv[2];
-let s = fs.readFileSync(path, 'utf8');
-s = s.replace(/(jQuery\s+Micro\s+Utils\s+v)(\d+\.\d+\.\d+)/, `$1${ver}`);
-s = s.replace(/(\$\.microUtils\s*=\s*\{\s*version:\s*['"])([^'"]+)(['"]\s*\})/, `$1${ver}$3`);
-fs.writeFileSync(path, s);
-NODE
-  git add "$PKG_JSON" "$SRC_FILE"
-else
-  git add "$PKG_JSON"
-fi
+update_version() {
+  local ver="$1"
+  # Update source file version
+  perl -pi -e "s/(jQuery\\s+Micro\\s+Utils\\s+v)\\d+\\.\\d+\\.\\d+/\$1$ver/g" src/jquery-micro-utils.js
+  perl -pi -e "s/(\\\$\\.microUtils\\s*=\\s*\\{\\s*version:\\s*['\"])([^'\"]+)(['\"]\\s*\\})/\$1$ver\$3/g" src/jquery-micro-utils.js
+  # Update README CDN link
+  perl -pi -e "s/(cdn\\.jsdelivr\\.net\\/gh\\/AnswerDotAI\\/jquery-micro-utils\\@)\\d+\\.\\d+\\.\\d+/\$1$ver/g" README.md
+}
 
+update_version "$NEW_VERSION"
+git add package.json src/jquery-micro-utils.js README.md
 git commit -m "chore(version): bump to v$NEW_VERSION" >/dev/null
 
 echo "Pushing changes to origin/$BRANCH"
