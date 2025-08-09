@@ -1,5 +1,5 @@
 /*!
- * 0.1.4
+ * jQuery Micro Utils v0.1.4
  * Small, CDN-friendly helpers for efficient traversal & ergonomics.
  * (c) 2025 Answer.AI — MIT License
  */
